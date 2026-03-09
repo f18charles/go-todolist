@@ -2,7 +2,7 @@ package router
 
 import (
 	"github.com/go-chi/chi/v5"
-	"todolist/internal/handler"
+	"go-todolist/internal/handler"
 )
 
 func NewChiRouter(h *handler.ChiHandler) *chi.Mux {

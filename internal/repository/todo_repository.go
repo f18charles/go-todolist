@@ -1,6 +1,6 @@
 package repository
 
-import "todolist/internal/models"
+import "go-todolist/internal/models"
 
 type TodoRepository interface {
 	Create(todo models.Todo) error

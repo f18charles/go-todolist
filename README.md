@@ -1,4 +1,4 @@
-# Todo API in Go
+# TodoList API in Go
 
 A practical example of building a flexible Go backend with clean architecture. The same business logic works with different routers and databases — no changes required.
 
@@ -20,7 +20,7 @@ The service layer? It stays exactly the same, no matter what.
 ## Project Structure
 
 ```text
-todolist-go/
+go-todolist/
 ├── cmd/
 │   └── server/
 │       └── main.go           # App entry point

@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	"todolist/internal/models"
+	"go-todolist/internal/models"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"

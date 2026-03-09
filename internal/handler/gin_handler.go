@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"todolist/internal/service"
+	"go-todolist/internal/service"
 )
 
 type GinHandler struct {

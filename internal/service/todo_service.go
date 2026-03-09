@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"todolist/internal/models"
-	"todolist/internal/repository"
+	"go-todolist/internal/models"
+	"go-todolist/internal/repository"
 )
 
 type TodoService struct {

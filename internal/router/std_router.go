@@ -2,7 +2,7 @@ package router
 
 import (
 	"net/http"
-	"todolist/internal/handler"
+	"go-todolist/internal/handler"
 )
 
 func NewStdRouter(h *handler.StdHandler) http.Handler {

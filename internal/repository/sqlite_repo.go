@@ -2,7 +2,7 @@ package repository
 
 import (
 	"database/sql"
-	"todolist/internal/models"
+	"go-todolist/internal/models"
 )
 
 type SQLiteRepo struct {

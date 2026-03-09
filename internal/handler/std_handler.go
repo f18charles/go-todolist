@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"todolist/internal/service"
+	"go-todolist/internal/service"
 )
 
 type StdHandler struct {

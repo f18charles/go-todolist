@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"todolist/internal/service"
+	"go-todolist/internal/service"
 )
 
 type ChiHandler struct {

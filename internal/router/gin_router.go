@@ -2,7 +2,7 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
-	"todolist/internal/handler"
+	"go-todolist/internal/handler"
 )
 
 func NewGinRouter(h *handler.GinHandler) *gin.Engine {
