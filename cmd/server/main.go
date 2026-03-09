@@ -14,21 +14,16 @@ import (
 )
 
 func main() {
-
 	db, err := sql.Open("sqlite3", "todos.db")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	repo := repository.NewSQLiteRepo(db)
-
-	service := service.NewTodoService(repo)
-
-	handler := handler.NewStdHandler(service)
-
-	r := router.NewStdRouter(handler)
+	svc := service.NewTodoService(repo)
+	h := handler.NewStdHandler(svc)
+	r := router.NewStdRouter(h)
 
 	log.Println("server running on :8080")
-
 	http.ListenAndServe(":8080", r)
 }
