@@ -13,7 +13,7 @@ Write your business logic once. Swap out frameworks and databases without touchi
 - **Routers:** `net/http`, Gin, or Chi
 - **Databases:** SQLite or MongoDB
 
-The service layer? It stays exactly the same, no matter what.
+> Think of your phone. You can change the screen protector and phone case. In the same way, you can change the router and repository(database facing layer) but the service logic will remain the same.
 
 ---
 
@@ -22,30 +22,35 @@ The service layer? It stays exactly the same, no matter what.
 ```text
 go-todolist/
 ├── cmd/
-│   └── server/
-│       └── main.go           # App entry point
+│   ├── server_sql/
+│   │   └── main.go           # Entry point — SQLite + Chi
+│   └── server_mongo/
+│       └── main.go           # Entry point — MongoDB + net/http
 │
 └── internal/
+    ├── database/
+    │   └── db.go              # SQLite and MongoDB init
+    │
     ├── models/
     │   └── todo.go            # Data structure
     │
     ├── repository/
-    │   ├── interface.go       # What a repo must do
-    │   ├── sqlite.go          # SQLite implementation
-    │   └── mongo.go           # MongoDB implementation
+    │   ├── todo_repository.go # Repository interface
+    │   ├── sqlite_repo.go     # SQLite implementation
+    │   └── mongo_repo.go      # MongoDB implementation
     │
     ├── service/
-    │   └── todo.go            # Business logic
+    │   └── todo_service.go    # Business logic
     │
     ├── handler/
-    │   ├── std.go             # net/http handler
-    │   ├── gin.go             # Gin handler
-    │   └── chi.go             # Chi handler
+    │   ├── std_handler.go     # net/http handler
+    │   ├── gin_handler.go     # Gin handler
+    │   └── chi_handler.go     # Chi handler
     │
     └── router/
-        ├── std.go             # net/http routes
-        ├── gin.go             # Gin routes
-        └── chi.go             # Chi routes
+        ├── std_router.go      # net/http routes
+        ├── gin_router.go      # Gin routes
+        └── chi_router.go      # Chi routes
 ```
 
 ---
@@ -54,7 +59,7 @@ go-todolist/
 
 ### 🧱 Model
 
-Just the data structure. No HTTP, no database concerns.
+Just the data structure.
 
 ```go
 type Todo struct {
@@ -67,10 +72,10 @@ type Todo struct {
 
 ### 💾 Repository
 
-The data layer. Defines a clear interface so the rest of the app doesn't care what database you use.
+The data layer. Defines a clear interface for the rest of the app.
 
 ```go
-type Repository interface {
+type TodoRepository interface {
     Create(todo Todo) error
     GetByID(id string) (Todo, error)
     GetAll() ([]Todo, error)
@@ -81,15 +86,14 @@ type Repository interface {
 
 ### ⚙️ Service
 
-Where the actual logic lives. It only knows about the repository interface — not the specific database.
+Where the actual logic lives. It only knows about the repository interface.
 
 ```go
-type Service struct {
-    repo Repository
+type TodoService struct {
+    Repo repository.TodoRepository
 }
 
-func (s *Service) CreateTodo(title string) (Todo, error) {
-    // Business logic here
+func (s *TodoService) Create(title string) (Todo, error) {
     // Validation, ID generation, timestamps
 }
 ```
@@ -106,12 +110,66 @@ Just connects URLs to handlers. No logic, just wiring.
 
 ## API Endpoints
 
-| Method   | Path          | Description           |
-|----------|---------------|-----------------------|
-| `POST`   | `/todos`      | Create a new todo     |
-| `GET`    | `/todos`      | List all todos        |
+| Method   | Path          | Description             |
+|----------|---------------|-------------------------|
+| `POST`   | `/todos`      | Create a new todo       |
+| `GET`    | `/todos`      | List all todos          |
 | `PATCH`  | `/todos/{id}` | Mark a todo as complete |
-| `DELETE` | `/todos/{id}` | Delete a todo         |
+| `DELETE` | `/todos/{id}` | Delete a todo           |
+
+---
+
+## Setup & Running
+
+### Prerequisites
+
+- Go 1.21+
+- Docker (optional, for MongoDB)
+
+### Install Dependencies
+
+```bash
+git clone https://github.com/f18charles/go-todolist.git
+cd go-todolist
+go mod tidy
+```
+
+## Running the Servers
+
+### Run with SQLite + Chi
+
+```bash
+go run cmd/server_sql/main.go
+```
+
+This uses:
+- **Database:** SQLite (creates `todos.db` in the project root automatically)
+- **Router:** Chi
+- **Handler:** Chi handler
+
+### Run with MongoDB + net/http
+
+First, start MongoDB. The easiest way is with Docker:
+
+```bash
+docker run -d --name mongo -p 27017:27017 mongo:latest
+```
+
+Then run the server:
+
+```bash
+go run cmd/server_mongo/main.go
+```
+
+This uses:
+- **Database:** MongoDB (`localhost:27017`, database `todolist`, collection `todos`)
+- **Router:** net/http standard library
+- **Handler:** Standard handler
+
+> **Note:** These two entry points use different router/handler combinations intentionally —
+> to demonstrate that any database can be paired with any router without changing the service layer.
+
+Both servers start at `http://localhost:8080`.
 
 ---
 
@@ -142,72 +200,46 @@ curl -X POST http://localhost:8080/todos \
 curl http://localhost:8080/todos
 ```
 
----
-
-## Running the Project
-
-### Quick Start
+**Mark a todo as complete**
 
 ```bash
-# Clone and go
-git clone https://github.com/yourname/todolist-go
-cd todolist-go
-
-# Get dependencies
-go mod tidy
-
-# Run the server
-go run cmd/server/main.go
+curl -X PATCH http://localhost:8080/todos/abc-123
 ```
 
-Server starts at `http://localhost:8080`
+**Delete a todo**
+
+```bash
+curl -X DELETE http://localhost:8080/todos/abc-123
+```
 
 ---
 
-## Making Changes
+## All Valid Combinations
 
-### Switch Routers
+Any handler and router can be paired with any database. Here's the full matrix:
 
-Just change one line in `main.go`:
+| Database | Router     | Handler     | How to wire it up                                    |
+|----------|------------|-------------|------------------------------------------------------|
+| SQLite   | Chi        | Chi         | `server_sql/main.go` (default)                       |
+| SQLite   | Gin        | Gin         | swap `NewChiHandler` → `NewGinHandler`, `NewChiRouter` → `NewGinRouter`  |
+| SQLite   | net/http   | Std         | swap `NewChiHandler` → `NewStdHandler`, `NewChiRouter` → `NewStdRouter`  |
+| MongoDB  | net/http   | Std         | `server_mongo/main.go` (default)                     |
+| MongoDB  | Gin        | Gin         | swap `NewStdHandler` → `NewGinHandler`, `NewStdRouter` → `NewGinRouter`  |
+| MongoDB  | Chi        | Chi         | swap `NewStdHandler` → `NewChiHandler`, `NewStdRouter` → `NewChiRouter`  |
 
-```go
-// Use Gin
-router := router.NewGinRouter(handler)
-
-// Or use Chi
-router := router.NewChiRouter(handler)
-
-// Or stick with net/http
-router := router.NewStdRouter(handler)
-```
-
-> The service layer? Not touched.
-
-### Switch Databases
-
-Change how you create the repository:
-
-```go
-// SQLite
-repo := repository.NewSQLite(db)
-
-// MongoDB
-repo := repository.NewMongo(collection)
-```
-
-> The service layer? Still unchanged.
+All swaps happen in `main.go` only. The service layer is never touched.
 
 ---
 
 ## Why This Works
 
-| Layer      | Responsibility       | Knows about                    |
-|------------|----------------------|--------------------------------|
-| Model      | Data structure       | Nothing else                   |
-| Repository | Database operations  | Only the model                 |
-| Service    | Business logic       | Only the repository interface  |
-| Handler    | HTTP handling        | Only the service               |
-| Router     | Route mapping        | Only handlers                  |
+| Layer      | Responsibility      |
+|------------|---------------------|
+| Model      | Data structure      |
+| Repository | Database operations |
+| Service    | Business logic      |
+| Handler    | HTTP handling       |
+| Router     | Route mapping       |
 
 Each layer has one job and only depends on the layer below it.
 
