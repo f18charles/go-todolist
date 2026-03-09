@@ -1,0 +1,16 @@
+package router
+
+import (
+	"github.com/go-chi/chi/v5"
+	"todolist/internal/handler"
+)
+
+func NewChiRouter(h *handler.ChiHandler) *chi.Mux {
+
+	r := chi.NewRouter()
+
+	r.Get("/todos", h.List)
+	r.Post("/todos", h.Create)
+
+	return r
+}
