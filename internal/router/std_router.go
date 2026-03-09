@@ -6,19 +6,27 @@ import (
 )
 
 func NewStdRouter(h *handler.StdHandler) http.Handler {
-
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/todos", func(w http.ResponseWriter, r *http.Request) {
-
-		if r.Method == "GET" {
+		switch r.Method {
+		case http.MethodGet:
 			h.List(w, r)
-			return
-		}
-
-		if r.Method == "POST" {
+		case http.MethodPost:
 			h.Create(w, r)
-			return
+		default:
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	mux.HandleFunc("/todos/", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPatch:
+			h.Complete(w, r)
+		case http.MethodDelete:
+			h.Delete(w, r)
+		default:
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		}
 	})
 
